@@ -2,9 +2,59 @@
 id: eun05oyg5vuos70e8so1sv7
 title: Notes
 desc: ""
-updated: 1718831525286
+updated: 1718832276261
 created: 1718830878755
 ---
+
+## Summary of Commands
+
+See more specifics in other sections below
+
+```bash
+# Navigate to your project directory
+cd path/to/your/project
+
+# Create a new README file
+echo "# Name-of-Project" >> README.md
+
+# Initialize a new Git repository
+git init
+
+# Add the README file to the staging area
+git add README.md
+
+# Commit the file
+git commit -m "first commit"
+
+# Create the main branch
+git branch -M main
+
+# Add the remote repository URL
+git remote add origin https://github.com/smith-ryant/Name-of-Project.git
+
+# Push the changes to the remote repository
+git push -u origin main
+
+# Create and switch to a new branch (e.g., feature-branch)
+git checkout -b feature-branch
+
+# Make some changes, then add and commit those changes
+echo "Some changes" >> changes.txt
+git add changes.txt
+git commit -m "Added changes to feature-branch"
+
+# Push the new branch to the remote repository
+git push -u origin feature-branch
+
+# Switch back to the main branch
+git checkout main
+
+# Merge the feature branch into the main branch
+git merge feature-branch
+
+# Push the updated main branch to the remote repository
+git push origin main
+```
 
 ## To create a new reposoitory from the command line:
 
