@@ -2,7 +2,7 @@
 id: eun05oyg5vuos70e8so1sv7
 title: Notes
 desc: ""
-updated: 1718832276261
+updated: 1722279967460
 created: 1718830878755
 ---
 
@@ -174,7 +174,7 @@ git pull origin
 
 If you want to pull changes from a specific branch, you can specify it:
 
-```
+```bash
 git pull origin main
 ```
 
