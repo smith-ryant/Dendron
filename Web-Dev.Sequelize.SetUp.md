@@ -1,7 +1,7 @@
 ---
 id: o4lvold8o9rtqy1aiq6uova
 title: SetUp
-desc: ""
+desc: ''
 updated: 1721781734274
 created: 1721781703414
 ---
@@ -32,12 +32,8 @@ const sequelize = new Sequelize(DATABASE_URL, {
 
 app.listen(PORT, () => console.log(`Example app listening on port ${PORT}!`));
 
-app.get("/allItems", (req, res) => {
-  sequelize.query("SELECT * FROM items;").then((dbRes) => {
-    console.log(dbRes);
-    res.send(dbRes[0]);
-  });
-});
+
+
 
 app.post("/register", (req, res) => {
   const { username, password } = req.body;
