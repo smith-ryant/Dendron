@@ -2,11 +2,18 @@
 id: wzefxpq8yfzluimaiy1vi32
 title: Capstone-Serverless
 desc: ""
-updated: 1722918593811
+updated: 1723086857086
 created: 1722827518067
 ---
 
-Certainly! Below is the provided code and accompanying observations formatted as Markdown:
+This section is for known/found bugs:
+
+1. Note list is not populating
+2. Nots are not becoming active when clicked
+3. Vite icon is not connected
+4. React icon is not connected
+
+This section is for the current project code. This will need to be updated regularly.
 
 ---
 
