@@ -2,9 +2,11 @@
 id: e9m5wkir6v95qzcnrxnjab7
 title: State
 desc: ""
-updated: 1718833282175
+updated: 1725291141941
 created: 1718833276132
 ---
+
+https://www.youtube.com/watch?v=V9i3cGD-mts
 
 ### What is State in React?
 
@@ -100,3 +102,56 @@ export default Counter;
 - Use the `useState` hook in functional components to declare and manage state.
 
 Understanding state is crucial for building responsive and interactive applications in React. With practice, managing state and using it to drive your UI will become more intuitive.
+
+## Updating State with Previous State (Best Practices)
+
+Updating state with the previous state is a common pattern in React, especially when the new state depends on the old state. React's `useState` hook provides a way to safely update state based on the previous state by using a functional update form. This is particularly useful to ensure that you are working with the most up-to-date state, especially when dealing with asynchronous updates.
+
+Here’s an example and explanation of how to update state using the old state:
+
+### Example:
+
+```javascript
+import { useState } from "react";
+
+export default function Counter() {
+  // Initialize a state variable 'count' with an initial value of 0.
+  const [count, setCount] = useState(0);
+
+  // Function to increment the count by 1 using the previous state.
+  function increment() {
+    setCount((prevCount) => prevCount + 1);
+  }
+
+  // Function to decrement the count by 1 using the previous state.
+  function decrement() {
+    setCount((prevCount) => prevCount - 1);
+  }
+
+  return (
+    <div>
+      <p>Current count: {count}</p>
+      <button onClick={increment}>Increment</button>
+      <button onClick={decrement}>Decrement</button>
+    </div>
+  );
+}
+```
+
+### Explanation:
+
+1. **Initial State**: The state variable `count` is initialized with an initial value of 0 using `useState(0)`.
+2. **Updating State with Previous State**:
+   - **Increment Function**: When the `Increment` button is clicked, the `increment` function is called. It updates the state using the functional form of `setCount`, which takes a function as its argument. This function receives the previous state (`prevCount`) and returns the new state (`prevCount + 1`).
+   - **Decrement Function**: Similarly, the `decrement` function updates the state based on the previous state (`prevCount - 1`).
+3. **Rendering**: The current value of `count` is displayed inside a paragraph element. Clicking the `Increment` or `Decrement` button triggers the respective function to update the state.
+
+### Why Use Functional Updates?
+
+1. **Correctness**: When updating state based on the previous state, using the functional form ensures that you always work with the most recent state. This avoids potential issues with stale state that can occur if multiple state updates are batched together.
+2. **Concurrency**: In concurrent mode, React may batch state updates for performance optimization. Using the functional update form guarantees that the state updates are applied correctly in sequence.
+3. **Simpler Code**: It makes the code easier to read and understand by explicitly showing that the new state is derived from the previous state.
+
+### Conclusion:
+
+Using the previous state to update the current state is a recommended practice in React when the new state depends on the old state. The functional update form provided by `useState` ensures that your state updates are reliable and consistent, especially in complex applications with asynchronous state changes.-

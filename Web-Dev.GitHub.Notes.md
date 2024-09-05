@@ -2,7 +2,7 @@
 id: eun05oyg5vuos70e8so1sv7
 title: Notes
 desc: ""
-updated: 1718832276261
+updated: 1722875354746
 created: 1718830878755
 ---
 
@@ -174,7 +174,7 @@ git pull origin
 
 If you want to pull changes from a specific branch, you can specify it:
 
-```
+```bash
 git pull origin main
 ```
 
@@ -192,3 +192,55 @@ git pull --rebase
 ```
 
 This command can be especially useful to avoid unnecessary merge commits in your project's history.
+
+---
+
+## Accidentally Deleted
+
+If you've accidentally deleted a folder and want to restore your local repository to match your current GitHub repository, you can use the following steps in the command line to pull the latest changes from the `main` branch on GitHub:
+
+1. **Open your terminal** and navigate to your local Git repository.
+
+2. **Ensure you're on the `main` branch** (or whichever branch you're working on):
+
+   ```bash
+   git checkout main
+   ```
+
+3. **Fetch the latest changes from the remote repository** to ensure your local repository is aware of any updates on GitHub:
+
+   ```bash
+   git fetch origin
+   ```
+
+4. **Reset your local branch to match the remote branch**, discarding any local changes and bringing your local repository in sync with GitHub:
+
+   ```bash
+   git reset --hard origin/main
+   ```
+
+   This command will reset your local `main` branch to match the remote `main` branch, effectively restoring your code to the latest state from GitHub. Please note that this will discard any local changes that haven't been pushed to GitHub, so make sure this is what you want before proceeding.
+
+5. **Verify the changes** to ensure everything is restored:
+
+   ```bash
+   git status
+   ```
+
+   This should indicate that your working directory is clean and matches the remote repository.
+
+### Important Note
+
+- **Backup Important Changes:** If you have any important changes that haven't been pushed to GitHub and want to avoid losing them, consider using `git stash` before the reset command. This will temporarily save your changes, allowing you to apply them later if needed:
+
+  ```bash
+  git stash
+  ```
+
+- **Restore Stashed Changes:** After resetting and verifying your restored code, you can apply the stashed changes if necessary:
+
+  ```bash
+  git stash apply
+  ```
+
+By following these steps, you should be able to restore your local code to match the current state of your GitHub repository on the `main` branch. If you have any additional questions or need further assistance, feel free to ask!
