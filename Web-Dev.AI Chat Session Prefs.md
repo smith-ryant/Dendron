@@ -2,7 +2,7 @@
 id: rjsmkb8su3m21mzhnsika0f
 title: AI Chat Session Prefs
 desc: ""
-updated: 1723430594309
+updated: 1724110714301
 created: 1722965444550
 ---
 
@@ -24,38 +24,50 @@ This application is called CodeNotes and it allows you to take notes using a mar
 
 Current Code: The following code is for a note taking application called CodeNotes.
 
+This application is being prepared for deployment as an SaaS.
+
+After reviewing this code please confirm my preferences as well as your understanding of the application.
+
 ```lua
 code-notes-app
-|-- src/
-|   |-- assets
-|   |   |-- react.svg
-|   |   |-- vite.svg
-|   |-- components
-|   |   |-- CodeNotes
-|   |   |   |--CodeNotes.css
-|   |   |   |--CodeNotes.jsx
-|   |   |   |--NoteList.css
-|   |   |   |--NoteList.jsx
-|   |   |-- Header
-|   |   |   |-- Header.css
-|   |   |   |-- Header.jsx
-|   |   |-- Home
-|   |   |   |-- Home.css
-|   |   |   |-- Home.jsx
-|   |   |-- MarkdownEditor
-|   |   |   |-- MarkdownEditor.css
-|   |   |   |-- MarkdownEditor.jsx
-|   |   |-- Spinner
-|   |   |   |-- Spinner.css
-|   |   |   |-- Spinner.jsx
-|   |   |-- store
-|   |   |   |-- authContext.jsx
-|   |-- App.css
-|   |-- App.jsx
-|   |-- index.css
-|   |-- main.jsx
-|   |-- supabaseClient.js
+|--> src/
+|    |--> assets
+|    |    |--> react.svg
+|    |    |--> vite.svg
+|    |--> components
+|    |    |--> CodeNotes
+|    |    |    |--> CodeNotes.css
+|    |    |    |--> CodeNotes.jsx
+|    |    |    |--> NoteEditor.jsx
+|    |    |    |--> Notesist.css
+|    |    |    |--> NotesList.jsx
+|    |    |--> Header
+|    |    |    |--> Header.css
+|    |    |    |--> Header.jsx
+|    |    |--> HomePage
+|    |    |    |--> Home.css
+|    |    |    |--> Home.jsx
+|    |    |--> MarkdownEditor
+|    |    |    |--> MarkdownEditor.css
+|    |    |    |--> MarkdownEditor.jsx
+|    |    |--> Spinner
+|    |    |    |--> Spinner.css
+|    |    |    |--> Spinner.jsx
+|    |    |--> store
+|    |    |    |--> authContext.jsx
+|    |--> hooks
+|    |    |--> useNotes.js
+|    |--> services
+|    |    |--> authServide.js
+|    |    |--> noteService.js
+|    |--> App.css
+|    |--> App.jsx
+|    |--> index.css
+|    |--> main.jsx
+|    |--> supabaseClient.js
 ```
+
+- components/CodeNotes/
 
 ```css
 /* src/components/CodeNotes/CodeNotes.css */
@@ -170,238 +182,156 @@ code-notes-app
 ```
 
 ```jsx
-// code-notes-app/src/components/CodeNotes/CodeNotes.jsx
-// Date and Time: 2024-08-11 18:30:00
+// src/components/CodeNotes/CodeNotes.jsx
+// Date and Time: 2024-08-18 @ 14:00
 
 import React, { useState, useEffect } from "react";
-import NotesList from "./NoteList";
-import MarkdownEditor from "../MarkdownEditor/MarkdownEditor";
-import { supabase } from "../../supabaseClient";
-import Spinner from "../Spinner/Spinner";
+import NotesList from "./NotesList";
+import NoteEditor from "./NoteEditor";
+import { useNotes } from "../../hooks/useNotes";
+import { supabase } from "../../supabaseClient"; // Import Supabase client
 import "./CodeNotes.css";
 
 const CodeNotes = () => {
-  const [notes, setNotes] = useState([]);
-  const [user, setUser] = useState(null);
+  const [selectedNoteId, setSelectedNoteId] = useState(null);
   const [newNoteContent, setNewNoteContent] = useState("");
   const [newNoteTitle, setNewNoteTitle] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [selectedNoteId, setSelectedNoteId] = useState(null);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
+    // Fetch the user from Supabase and set it to state
     const fetchUser = async () => {
-      try {
-        const {
-          data: { user },
-          error,
-        } = await supabase.auth.getUser();
-        if (error) {
-          console.error("Error fetching user:", error.message);
-        } else {
-          console.log("Fetched user:", user);
-          setUser(user);
-        }
-      } catch (error) {
-        console.error("Unexpected error fetching user:", error);
+      const { data, error } = await supabase.auth.getUser();
+      if (error) {
+        console.error("Error fetching user:", error.message);
+        return;
       }
+      setUser(data.user);
     };
 
     fetchUser();
   }, []);
 
-  useEffect(() => {
-    if (user) {
-      const fetchNotes = async () => {
-        try {
-          const { data, error } = await supabase
-            .from("notes")
-            .select("*")
-            .eq("user_id", user.id)
-            .order("id", { ascending: true });
-
-          if (error) {
-            console.error("Error fetching notes:", error.message);
-          } else {
-            console.log("Fetched notes:", data);
-            setNotes(data);
-          }
-        } catch (error) {
-          console.error("Unexpected error fetching notes:", error);
-        }
-      };
-
-      fetchNotes();
-    }
-  }, [user]);
-
-  useEffect(() => {
-    const saveToLocalStorage = () => {
-      localStorage.setItem("currentNoteTitle", newNoteTitle);
-      localStorage.setItem("currentNoteContent", newNoteContent);
-    };
-
-    const loadFromLocalStorage = () => {
-      setNewNoteTitle(localStorage.getItem("currentNoteTitle") || "");
-      setNewNoteContent(localStorage.getItem("currentNoteContent") || "");
-    };
-
-    window.addEventListener("beforeunload", saveToLocalStorage);
-    window.addEventListener("focus", loadFromLocalStorage);
-
-    return () => {
-      window.removeEventListener("beforeunload", saveToLocalStorage);
-      window.removeEventListener("focus", loadFromLocalStorage);
-    };
-  }, [newNoteTitle, newNoteContent]);
+  // Only call useNotes when user is defined
+  const { notes, loading, error, saveCurrentNote, deleteCurrentNote } =
+    useNotes(user);
 
   const handleNoteClick = (note) => {
+    setSelectedNoteId(note.id);
     setNewNoteTitle(note.title);
     setNewNoteContent(note.content);
-    setSelectedNoteId(note.id);
   };
 
-  const handleSaveNote = async (event) => {
-    event.preventDefault();
+  const handleSaveNote = (note) => {
+    saveCurrentNote(note);
+    setSelectedNoteId(null);
+  };
 
-    if (!newNoteTitle || !newNoteContent) {
-      setError("Both title and content are required.");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-
-    try {
-      if (!user) {
-        setError("User not authenticated. Please log in again.");
-        setLoading(false);
-        return;
-      }
-
-      if (selectedNoteId) {
-        const { data, error } = await supabase
-          .from("notes")
-          .update({
-            title: newNoteTitle,
-            content: newNoteContent,
-          })
-          .eq("id", selectedNoteId)
-          .select("*");
-
-        if (error) {
-          console.error("Error updating note:", error.message);
-          setError("Error updating note. Please try again.");
-        } else {
-          setNotes((prevNotes) =>
-            prevNotes.map((note) =>
-              note.id === selectedNoteId ? data[0] : note
-            )
-          );
-        }
-      } else {
-        const { data, error } = await supabase
-          .from("notes")
-          .insert([
-            {
-              title: newNoteTitle,
-              content: newNoteContent,
-              user_id: user.id,
-            },
-          ])
-          .select("*");
-
-        if (error) {
-          console.error("Error adding note:", error.message);
-          setError("Error adding note. Please try again.");
-        } else {
-          setNotes((prevNotes) => [...prevNotes, data[0]]);
-        }
-      }
-
-      setNewNoteContent("");
-      setNewNoteTitle("");
+  const handleDeleteNote = () => {
+    if (selectedNoteId) {
+      deleteCurrentNote(selectedNoteId);
       setSelectedNoteId(null);
-    } catch (error) {
-      console.error("Unexpected error saving note:", error);
-      setError("Unexpected error. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeleteNote = async () => {
-    if (!selectedNoteId) {
-      setError("No note selected for deletion.");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-
-    try {
-      const { error } = await supabase
-        .from("notes")
-        .delete()
-        .eq("id", selectedNoteId);
-
-      if (error) {
-        console.error("Error deleting note:", error.message);
-        setError("Error deleting note. Please try again.");
-      } else {
-        setNotes((prevNotes) =>
-          prevNotes.filter((note) => note.id !== selectedNoteId)
-        );
-        setNewNoteContent("");
-        setNewNoteTitle("");
-        setSelectedNoteId(null);
-      }
-    } catch (error) {
-      console.error("Unexpected error deleting note:", error);
-      setError("Unexpected error. Please try again.");
-    } finally {
-      setLoading(false);
     }
   };
 
   const handleAddNote = () => {
-    setNewNoteContent("");
     setNewNoteTitle("");
+    setNewNoteContent("");
     setSelectedNoteId(null);
   };
 
   return (
     <div className="code-notes-container">
       <NotesList notes={notes} onNoteClick={handleNoteClick} />
-      <div className="code-notes-content">
-        <h1>CodeNotes</h1>
-        <div className="button-group">
-          <button className="add-note-button" onClick={handleAddNote}>
-            Add Note
-          </button>
-          <button
-            className="save-note-button"
-            onClick={handleSaveNote}
-            disabled={loading}
-          >
-            {loading ? <Spinner /> : "Save Note"}
-          </button>
-          <button className="delete-note-button" onClick={handleDeleteNote}>
-            Delete Note
-          </button>
-        </div>
-        <MarkdownEditor
-          content={newNoteContent}
-          setContent={setNewNoteContent}
-          setTitle={setNewNoteTitle}
-        />
-        {error && <p className="error-message">{error}</p>}
-      </div>
+      <NoteEditor
+        selectedNoteId={selectedNoteId}
+        newNoteTitle={newNoteTitle}
+        newNoteContent={newNoteContent}
+        setNewNoteTitle={setNewNoteTitle}
+        setNewNoteContent={setNewNoteContent}
+        loading={loading}
+        error={error}
+        onSaveNote={handleSaveNote}
+        onDeleteNote={handleDeleteNote}
+        onAddNote={handleAddNote}
+      />
     </div>
   );
 };
 
 export default CodeNotes;
+```
+
+```jsx
+// src/components/CodeNotes/NoteEditor.jsx
+// Date and Time: 2024-08-18 @ 14:00
+// A Component for editing notes
+
+import React, { useEffect } from "react";
+import MarkdownEditor from "../MarkdownEditor/MarkdownEditor";
+import Spinner from "../Spinner/Spinner";
+
+const NoteEditor = ({
+  selectedNoteId,
+  newNoteTitle,
+  newNoteContent,
+  setNewNoteTitle,
+  setNewNoteContent,
+  loading,
+  error,
+  onSaveNote,
+  onDeleteNote,
+  onAddNote,
+}) => {
+  const handleSaveNote = (event) => {
+    event.preventDefault();
+    onSaveNote({
+      id: selectedNoteId,
+      title: newNoteTitle,
+      content: newNoteContent,
+    });
+  };
+
+  useEffect(() => {
+    if (selectedNoteId === null) {
+      setNewNoteTitle("");
+      setNewNoteContent("");
+    }
+  }, [selectedNoteId, setNewNoteTitle, setNewNoteContent]);
+
+  return (
+    <div className="code-notes-content">
+      <h1>CodeNotes</h1>
+      <div className="button-group">
+        <button className="add-note-button" onClick={onAddNote}>
+          Add Note
+        </button>
+        <button
+          className="save-note-button"
+          onClick={handleSaveNote}
+          disabled={loading}
+        >
+          {loading ? <Spinner /> : "Save Note"}
+        </button>
+        <button
+          className="delete-note-button"
+          onClick={onDeleteNote}
+          disabled={!selectedNoteId || loading}
+        >
+          Delete Note
+        </button>
+      </div>
+      <MarkdownEditor
+        content={newNoteContent}
+        setContent={setNewNoteContent}
+        setTitle={setNewNoteTitle}
+      />
+      {error && <p className="error-message">{error}</p>}
+    </div>
+  );
+};
+
+export default NoteEditor;
 ```
 
 ```css
@@ -449,7 +379,7 @@ export default CodeNotes;
 // Date & Time: 2024-08-11 @ 16:00
 
 import React from "react";
-import "./NoteList.css";
+import "./NotesList.css";
 
 const NotesList = ({ notes, onNoteClick }) => {
   // Sort the notes alphabetically by title
@@ -475,6 +405,8 @@ const NotesList = ({ notes, onNoteClick }) => {
 
 export default NotesList;
 ```
+
+- components/Header/
 
 ```css
 /* code-notes-app/src/components/Header/Header.css */
@@ -730,6 +662,8 @@ const Header = () => {
 export default Header;
 ```
 
+- components/HomePage/
+
 ```css
 /* code-notes-app/src/components/HomePage/Home.css */
 
@@ -758,6 +692,7 @@ body {
   max-width: 400px; /* Maximum width for responsiveness */
   width: 100%; /* Full width within the max-width */
   margin: 20px; /* Center the container vertically if necessary */
+  text-align: center; /* Center text */
 }
 
 /* Title styling */
@@ -765,7 +700,6 @@ body {
   font-size: 2rem; /* Large title size */
   margin-bottom: 20px; /* Space below title */
   color: #f0f0f0;
-  text-align: center; /* Center text */
 }
 
 /* Form styling */
@@ -803,8 +737,8 @@ body {
 
 /* Button styling */
 .auth-button {
-  width: 80%; /* Relative width for buttons */
-  padding: 12px;
+  width: auto; /* Allow button to expand with text */
+  padding: 12px 24px; /* Add padding for better appearance */
   background-color: #094554; /* Primary button color */
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); /* Shadow for depth */
   color: #ffffff;
@@ -816,7 +750,7 @@ body {
   transition: background-color 0.3s;
   outline: none; /* Remove outline on focus */
   margin-top: 20px; /* Space above the button */
-  max-width: 200px; /* Limit the max width to avoid over-stretching */
+  max-width: 100%; /* Ensure the button does not exceed container width */
 }
 
 .auth-button:hover {
@@ -830,8 +764,8 @@ body {
 
 /* Switch button styling */
 .switch-button {
-  width: 80%; /* Relative width for buttons */
-  padding: 12px;
+  width: auto; /* Allow button to expand with text */
+  padding: 12px 24px; /* Add padding for better appearance */
   background-color: transparent; /* Transparent background for contrast */
   box-shadow: none; /* No shadow for secondary button */
   color: #f57145;
@@ -842,7 +776,7 @@ body {
   cursor: pointer;
   transition: background-color 0.3s, color 0.3s;
   margin-top: 15px; /* Space above the button */
-  max-width: 200px; /* Limit the max width */
+  max-width: 100%; /* Ensure the button does not exceed container width */
   text-align: center; /* Center text */
   text-decoration: none; /* Remove text underline */
 }
@@ -868,7 +802,7 @@ body {
 
 ```jsx
 // code-notes-app/src/components/HomePage/Home.jsx
-// Date and Time: 2024-08-07 22:00:00
+// Date and Time: 2024-08-12 22:45:00
 
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../store/authContext";
@@ -928,18 +862,17 @@ const Home = () => {
           setMessage("Login successful!");
           setTimeout(() => {
             setMessage("");
-            navigate("/codenotes");
+            navigate("/codenotes"); // Redirect after login
           }, 1000);
         }
       } else {
         const result = await register(email, password, username);
         if (result.success) {
           console.log("Registration successful:", email);
-          setMessage("Sign up successful! Please log in.");
-          setUsername("");
-          setEmail("");
-          setPassword("");
-          setIsLogin(true);
+          setMessage("Sign up successful! Redirecting to CodeNotes...");
+          setTimeout(() => {
+            navigate("/codenotes"); // Redirect after registration
+          }, 1000);
         }
       }
     } catch (error) {
@@ -1044,6 +977,8 @@ const Home = () => {
 export default Home;
 ```
 
+- components/MarkdownEditor/
+
 ```css
 /* code-notes-app/src/components/MarkdownEditor/MarkdownEditor.css */
 /* Date & Time: 2024-08-11 @ 22:00 */
@@ -1142,6 +1077,8 @@ const MarkdownEditor = ({ content, setContent, setTitle }) => {
 export default MarkdownEditor;
 ```
 
+- components/Spinner/
+
 ```css
 /* src/components/Spinner/Spinner.css */
 /* Date and Time: 2024-08-06 10:30:00 */
@@ -1180,18 +1117,25 @@ const Spinner = () => {
 export default Spinner;
 ```
 
+- components/store/
+
 ```jsx
-// code-notes-app/src/components/store/authContext.jsx
-// Date and Time: 2024-08-11 20:45:00
+// src/components/store/authContext.jsx
+// Date and Time: 2024-08-19 @ 12:14:00
 
 import React, { createContext, useReducer, useContext, useEffect } from "react";
-import { supabase } from "../../supabaseClient";
+import {
+  login,
+  register,
+  logout,
+  getCurrentUser,
+} from "../../services/authService";
+import { supabase } from "../../supabaseClient"; // Ensure this import is present
 
 const AuthContext = createContext();
 
 const initialState = {
   userProfile: null,
-  token: null,
   isAuthenticated: false,
 };
 
@@ -1200,14 +1144,12 @@ const authReducer = (state, action) => {
     case "LOGIN":
       return {
         ...state,
-        token: action.payload.token,
         userProfile: action.payload.userProfile,
         isAuthenticated: true,
       };
     case "LOGOUT":
       return {
         ...state,
-        token: null,
         userProfile: null,
         isAuthenticated: false,
       };
@@ -1219,80 +1161,46 @@ const authReducer = (state, action) => {
 export const AuthProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  const login = async (email, password) => {
+  const handleLogin = async (email, password) => {
     try {
-      console.log("Attempting to login user:", email);
-
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        console.error("Login error:", error.message);
-        throw new Error(`Login error: ${error.message}`);
-      }
-
-      const user = data.user;
-      if (!user) {
-        console.error("Login failed, no user returned.");
-        throw new Error("Login failed, no user returned.");
-      }
-
-      console.log("User logged in successfully:", user);
-
-      // Simplified version without fetching user profile
-      dispatch({
-        type: "LOGIN",
-        payload: { token: user.access_token, userProfile: null },
-      });
-
-      console.log(
-        "User token dispatched successfully. User is now authenticated."
-      );
-
+      const user = await login(email, password);
+      dispatch({ type: "LOGIN", payload: { userProfile: user } });
       return { success: true };
-    } catch (err) {
-      console.error(`Login failed: ${err.message}`);
-      throw err;
+    } catch (error) {
+      console.error(`Login failed: ${error.message}`);
+      throw error;
     }
   };
 
-  const logout = async () => {
+  const handleRegister = async (email, password, username) => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      dispatch({ type: "LOGOUT" });
-      console.log("User logged out successfully");
+      const user = await register(email, password, username);
+      dispatch({ type: "LOGIN", payload: { userProfile: user } });
+      return { success: true };
     } catch (error) {
-      console.error("Logout error:", error.message);
+      console.error(`Registration failed: ${error.message}`);
+      throw error;
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      dispatch({ type: "LOGOUT" });
+    } catch (error) {
+      console.error(`Logout failed: ${error.message}`);
     }
   };
 
   useEffect(() => {
     const checkUser = async () => {
       try {
-        const {
-          data: { user },
-          error,
-        } = await supabase.auth.getUser();
-
-        if (error) {
-          console.error("Error checking user:", error.message);
-          return;
-        }
-
+        const user = await getCurrentUser();
         if (user) {
-          console.log("User detected on initial load:", user);
-          dispatch({
-            type: "LOGIN",
-            payload: { token: user.access_token, userProfile: null },
-          });
-        } else {
-          console.log("No user session found on initial load.");
+          dispatch({ type: "LOGIN", payload: { userProfile: user } });
         }
-      } catch (err) {
-        console.error("Unexpected error checking user:", err.message);
+      } catch (error) {
+        console.error("Error checking user:", error.message);
       }
     };
 
@@ -1300,12 +1208,8 @@ export const AuthProvider = ({ children }) => {
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log(`Auth state changed: ${event}`);
         if (event === "SIGNED_IN" && session) {
-          dispatch({
-            type: "LOGIN",
-            payload: { token: session.access_token, userProfile: null },
-          });
+          dispatch({ type: "LOGIN", payload: { userProfile: session.user } });
         } else if (event === "SIGNED_OUT") {
           dispatch({ type: "LOGOUT" });
         }
@@ -1313,41 +1217,39 @@ export const AuthProvider = ({ children }) => {
     );
 
     const handleFocus = async () => {
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser();
-      if (error || !user) {
-        console.error("User session expired or not found:", error?.message);
+      try {
+        const user = await getCurrentUser();
+        if (!user) {
+          dispatch({ type: "LOGOUT" });
+        } else {
+          dispatch({ type: "LOGIN", payload: { userProfile: user } });
+        }
+      } catch (error) {
+        console.error("Error checking session:", error.message);
         dispatch({ type: "LOGOUT" });
-      } else {
-        dispatch({
-          type: "LOGIN",
-          payload: { token: user.access_token, userProfile: null },
-        });
       }
     };
 
     window.addEventListener("focus", handleFocus);
-
-    // Listen for page unload or close to clear auth state
-    const handleBeforeUnload = () => {
-      logout(); // Automatically log out
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
       if (authListener) {
         authListener.subscription.unsubscribe();
       }
       window.removeEventListener("focus", handleFocus);
-      window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, []);
 
   return (
-    <AuthContext.Provider value={{ state, dispatch, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        state,
+        dispatch,
+        login: handleLogin,
+        logout: handleLogout,
+        register: handleRegister,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -1362,6 +1264,225 @@ export const useAuth = () => {
 };
 
 export default AuthContext;
+```
+
+- src/hooks/
+
+```js
+// src/hooks/useNotes.js
+// Date and Time: 2024-08-18 @ 14:00
+
+import { useState, useEffect } from "react";
+import { fetchNotes, saveNote, deleteNote } from "../services/noteService";
+
+export const useNotes = (user) => {
+  const [notes, setNotes] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const loadNotes = async () => {
+      setLoading(true);
+      try {
+        const data = await fetchNotes(user.id);
+        setNotes(data);
+      } catch (err) {
+        setError("Failed to load notes. Please try again.");
+      } finally {
+        setLoading(false); // Ensure loading is set to false after the attempt
+      }
+    };
+
+    if (user) {
+      loadNotes();
+    }
+  }, [user]);
+
+  const saveCurrentNote = async (note) => {
+    setLoading(true);
+    setError("");
+    try {
+      const updatedNote = await saveNote(note, user.id);
+      setNotes((prevNotes) =>
+        note.id
+          ? prevNotes.map((n) => (n.id === note.id ? updatedNote : n))
+          : [...prevNotes, updatedNote]
+      );
+    } catch (err) {
+      setError("Failed to save the note. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteCurrentNote = async (noteId) => {
+    setLoading(true);
+    setError("");
+    try {
+      await deleteNote(noteId);
+      setNotes((prevNotes) => prevNotes.filter((n) => n.id !== noteId));
+    } catch (err) {
+      setError("Failed to delete the note. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { notes, loading, error, saveCurrentNote, deleteCurrentNote };
+};
+```
+
+- src/services/
+
+```js
+// src/services/authService.js
+// Date and Time: 2024-08-18 @ 16:00
+
+import { supabase } from "../supabaseClient";
+
+export const login = async (email, password) => {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+  if (error) throw new Error(`Login error: ${error.message}`);
+  return data.user;
+};
+
+export const register = async (email, password, username) => {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { username },
+    },
+  });
+  if (error) throw new Error(`Registration error: ${error.message}`);
+
+  const user = data.user;
+  if (!user) throw new Error("Registration failed, no user returned.");
+
+  // Insert the user profile into the user_profiles table
+  const { error: profileError } = await supabase
+    .from("user_profiles")
+    .insert([{ user_id: user.id, username, email }]);
+
+  if (profileError) throw new Error("Error adding user to profiles.");
+
+  return user;
+};
+
+export const logout = async () => {
+  const { error } = await supabase.auth.signOut();
+  if (error) throw new Error(`Logout error: ${error.message}`);
+};
+
+export const getCurrentUser = async () => {
+  const { data, error } = await supabase.auth.getUser();
+  if (error) throw new Error(`Error checking user: ${error.message}`);
+  return data.user;
+};
+```
+
+```js
+// a service for Note Management
+
+// src/services/noteService.js
+// Date and Time: 2024-08-18 @ 14:00
+
+import { supabase } from "../supabaseClient";
+
+export const fetchNotes = async (userId) => {
+  try {
+    const { data, error } = await supabase
+      .from("notes")
+      .select("*")
+      .eq("user_id", userId)
+      .order("id", { ascending: true });
+
+    if (error) throw new Error(`Error fetching notes: ${error.message}`);
+
+    return data;
+  } catch (err) {
+    console.error(err);
+    throw err; // Ensure the error is properly thrown to be caught in the hook
+  }
+};
+
+export const saveNote = async (note, userId) => {
+  const { id, title, content } = note;
+
+  if (id) {
+    const { data, error } = await supabase
+      .from("notes")
+      .update({ title, content })
+      .eq("id", id)
+      .select("*");
+
+    if (error) throw error;
+    return data[0];
+  } else {
+    const { data, error } = await supabase
+      .from("notes")
+      .insert([{ title, content, user_id: userId }])
+      .select("*");
+
+    if (error) throw error;
+    return data[0];
+  }
+};
+
+export const deleteNote = async (noteId) => {
+  const { error } = await supabase.from("notes").delete().eq("id", noteId);
+  if (error) throw error;
+};
+```
+
+- src/app
+
+```css
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
 ```
 
 ```jsx
@@ -1413,7 +1534,11 @@ function App() {
 export default App;
 ```
 
+- src/main
+
 ```jsx
+// code-notes-app/src/main.jsx
+
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
@@ -1429,9 +1554,11 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 );
 ```
 
+- src/supabaseClient.js
+
 ```js
 // code-notes-app/src/supabaseClient.js
-// Date and Time: 2024-08-11 18:30:00
+// Date and Time: 2024-08-12 21:10:00
 
 import { createClient } from "@supabase/supabase-js";
 
@@ -1444,10 +1571,28 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    persistSession: true, // Enable session persistence
-    autoRefreshToken: true, // Enable auto-refresh of session tokens
+    persistSession: false, // Disable session persistence
+    autoRefreshToken: true, // Still allow auto-refreshing of tokens
   },
 });
 
 console.log("Supabase client initialized:", supabaseUrl);
+```
+
+- src/index.html
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CodeNotes</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
 ```

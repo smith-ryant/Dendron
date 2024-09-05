@@ -2,9 +2,11 @@
 id: e9m5wkir6v95qzcnrxnjab7
 title: State
 desc: ""
-updated: 1722373553783
+updated: 1725291141941
 created: 1718833276132
 ---
+
+https://www.youtube.com/watch?v=V9i3cGD-mts
 
 ### What is State in React?
 
